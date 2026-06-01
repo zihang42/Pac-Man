@@ -1,0 +1,13 @@
+[project]
+name = "pac-man"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "arcade>=3.3.3",
+    "mazegenerator @ file:///${PROJECT_ROOT}/lib/mazegenerator-2.0.1-py3-none-any.whl"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
