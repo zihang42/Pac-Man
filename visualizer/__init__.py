@@ -1,3 +1,3 @@
-from .window import Pacman
+from .window import Window
 
-__all__ = ["Pacman"]
+__all__ = ["Window"]
