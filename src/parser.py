@@ -14,11 +14,36 @@ from src.logger import logger
 
 
 class LevelConfig(BaseModel):
+    """Configuration for one maze level.
+
+    Attributes:
+        width: Width of the generated maze.
+        height: Height of the generated maze.
+        seed: Optional random seed used to generate the maze.
+    """
+
     width: int = Field(default=20, ge=10, le=99)
     height: int = Field(default=20, ge=10, le=99)
+    seed: int | None = Field(default=None)
 
 
 class Config(BaseModel):
+    """Game configuration loaded from a JSON config file.
+
+    Attributes:
+        levels: Level definitions used by the game.
+        level_max_time: Maximum duration of each level in seconds.
+        lives: Number of lives available to the player.
+        pacgum: Number of pacgums placed in a level.
+        points_per_pacgum: Score awarded for one pacgum.
+        points_per_super_pacgum: Score awarded for one super pacgum.
+        points_per_ghost: Score awarded for one ghost.
+        highscore_filename: JSON file used to store the high score.
+        window_width: Width of the game window in pixels.
+        window_height: Height of the game window in pixels.
+        fps: Target frames per second.
+    """
+
     levels: list[LevelConfig] = Field(
         default_factory=lambda: [LevelConfig() for _ in range(10)],
         min_length=10,
@@ -33,7 +58,6 @@ class Config(BaseModel):
     window_width: int = Field(default=1280, ge=640)
     window_height: int = Field(default=720, ge=480)
     fps: int = Field(default=60, ge=30, le=240)
-    seed: int = Field(default=42, ge=0)
 
     @field_validator("highscore_filename", mode="before")
     @classmethod
@@ -56,10 +80,23 @@ class Config(BaseModel):
 
 
 class Parser:
+    """Load and validate game configuration from a JSON file."""
+
     def __init__(self, path: str) -> None:
+        """Store the path to the configuration file.
+
+        Args:
+            path: Path to the JSON configuration file.
+        """
         self.path = Path(path)
 
     def load(self) -> Config:
+        """Load the configuration file.
+
+        Returns:
+            A validated config, or the default config when the file cannot be
+            loaded or parsed.
+        """
         if not self.path.is_file():
             logger.warning("config is not a file")
             return Config()
@@ -75,6 +112,14 @@ class Parser:
             return Config()
 
     def _validate(self, data: dict[str, Any]) -> Config:
+        """Validate raw configuration data.
+
+        Args:
+            data: Raw configuration values loaded from JSON.
+
+        Returns:
+            A validated config with invalid fields replaced by defaults.
+        """
         try:
             unknown_keys = set(data.keys()) - set(Config.model_fields.keys())
             for unknown_key in unknown_keys:
