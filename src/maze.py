@@ -77,6 +77,7 @@ class MazeLoader:
                 )
             _cells.append(cells)
         logger.info(
-            f"maze generated, width: {self.level.width} height: {self.level.height}"
+            f"maze generated, width: {self.level.width} "
+            "height: {self.level.height}"
         )
         return Maze(self.level.width, self.level.height, _cells)
