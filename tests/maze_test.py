@@ -5,7 +5,6 @@ from src.player import Player
 from src.utils import DIRECTION
 from visualizer.views import sprites as _sprites  # noqa: F401
 
-
 KEY_DIRECTIONS = {
     arcade.key.UP: DIRECTION.UP,
     arcade.key.W: DIRECTION.UP,
@@ -43,7 +42,7 @@ class TestView(arcade.View):
 
         self._draw_maze(left, bottom, cell_size)
 
-        row, col = self.player.pos.x, self.player.pos.y
+        row, col = self.player.row, self.player.col
         center_x = left + (col + 0.5) * cell_size
         center_y = bottom + (self.maze.height - row - 0.5) * cell_size
         texture = self.player_textures[self.player.direction][
@@ -60,7 +59,7 @@ class TestView(arcade.View):
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         direction = KEY_DIRECTIONS.get(symbol)
         if direction is not None:
-            self.player.move(direction)
+            self.player.set_direction(direction)
 
     def on_update(self, delta_time: float) -> None:
         # For the animation
@@ -69,6 +68,7 @@ class TestView(arcade.View):
             frame_count = len(self.player_textures[self.player.direction])
             self.player_frame = (self.player_frame + 1) % frame_count
             self.player_frame_time = 0.0
+        self.player.on_update(delta_time)
 
     def _layout(self) -> tuple[float, float, float]:
         usable_width = self.window.width - self.margin * 2
@@ -80,15 +80,10 @@ class TestView(arcade.View):
         maze_width = self.maze.width * cell_size
         maze_height = self.maze.height * cell_size
         left = self.margin + (usable_width - maze_width) / 2
-        bottom = (
-            self.margin
-            + (usable_height - maze_height) / 2
-        )
+        bottom = self.margin + (usable_height - maze_height) / 2
         return left, bottom, cell_size
 
-    def _draw_maze(
-        self, left: float, bottom: float, cell_size: float
-    ) -> None:
+    def _draw_maze(self, left: float, bottom: float, cell_size: float) -> None:
         for row, cells in enumerate(self.maze.cells):
             for col, cell in enumerate(cells):
                 x1 = left + col * cell_size
