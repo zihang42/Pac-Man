@@ -1,4 +1,4 @@
-from src.maze import MazeLoader
+from src.maze import MazeLoader, Maze
 from src.parser import Parser
 
 from visualizer import Window
@@ -16,7 +16,7 @@ def main() -> None:
     pacman_visu.start()
 
 
-def print_maze(maze) -> None:
+def print_maze(maze: Maze) -> None:
     """
     An example to draw the 42 pattern,
     the maze libaray doesn't indicate the 42 cell,
