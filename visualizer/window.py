@@ -46,7 +46,7 @@ class Window:
             enable_polling=True,
             update_rate=1 / fps,
         )
-        self.menu = MainMenuView()
+        self.menu = MainMenuView(debug=True)
         self.score_board = ScoreBoardView()
         self.game_over = GameOverView()
         self.victory = VictoryView()

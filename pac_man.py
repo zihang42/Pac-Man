@@ -1,7 +1,7 @@
 from src.maze import MazeLoader
 from src.parser import Parser
 
-# from visualizer import Window
+from visualizer import Window
 
 
 def main() -> None:
@@ -10,10 +10,10 @@ def main() -> None:
     config = parser.load()
     maze = MazeLoader(config.levels[0]).load()
     print_maze(maze)
-    # pacman_visu = Window(config.window_width,
-    #                      config.window_height,
-    #                      config.fps)
-    # pacman_visu.start()
+    pacman_visu = Window(config.window_width,
+                         config.window_height,
+                         config.fps)
+    pacman_visu.start()
 
 
 def print_maze(maze) -> None:
