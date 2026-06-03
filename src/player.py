@@ -2,6 +2,13 @@ from src.logger import logger
 from src.maze import Maze
 from src.utils import DIRECTION, Position, next_position
 
+OFFSETS = {
+    DIRECTION.UP: (-1, 0),
+    DIRECTION.DOWN: (1, 0),
+    DIRECTION.LEFT: (0, -1),
+    DIRECTION.RIGHT: (0, 1),
+}
+
 
 class Player:
     """
