@@ -25,7 +25,7 @@ class Maze:
 
     def can_move(self, pos: Position, direction: DIRECTION) -> bool:
         x, y = pos.x, pos.y
-        cell = self.cells[y][x]
+        cell = self.cells[x][y]
         if direction == DIRECTION.UP:
             return not cell.north_wall and x > 0
         elif direction == DIRECTION.DOWN:
