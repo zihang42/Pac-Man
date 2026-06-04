@@ -24,6 +24,7 @@ class Maze:
     cells: list[list[Cell]]
 
     def can_move(self, pos: Position, direction: DIRECTION) -> bool:
+        """Can the entity move on the given direction and position"""
         x, y = pos.x, pos.y
         cell = self.cells[x][y]
         if direction == DIRECTION.UP:
