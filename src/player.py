@@ -11,7 +11,16 @@ OFFSETS = {
 
 
 class Player:
-    """Player state and one-cell movement rules."""
+    """
+    Player state and one-cell movement rules.
+    Args:
+    pos: the current position of the player
+    direction: the current position of the player
+    request_direction: change the direction to a new one
+    target: target cell for the current direction
+    row: for calculating the animation
+    col: for calculating the animation
+    """
 
     def __init__(self, maze: Maze, lives: int, speed: int) -> None:
         self.maze = maze
@@ -68,14 +77,18 @@ class Player:
         self.request_direction = direction
 
     def on_update(self, delta_time: float) -> None:
-        """Move the player according to elapsed time."""
+        """
+        Move the player according to elapsed time.
+        """
         if not self.is_alive:
             return
         distance = max(0, delta_time) * max(1, self.speed)
         while distance > 0:
             if self.target is None:
+                # If detect user change the direction
                 if self.maze.can_move(self.pos, self.request_direction):
                     self.direction = self.request_direction
+                # Move on the same direction
                 if self.maze.can_move(self.pos, self.direction):
                     self.target = Position(
                         self.pos.x + OFFSETS[self.direction][0],
