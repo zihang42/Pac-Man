@@ -53,6 +53,15 @@ class TestView(arcade.View):
             arcade.SpriteList()
         )
         self.player_sprites.append(self.player_sprite)
+        self.ghost_sprites: arcade.SpriteList[arcade.Sprite] = (
+            arcade.SpriteList()
+        )
+
+        self.ghost_colors = ["cyan", "orange", "pink", "red"]
+
+        for color in self.ghost_colors:
+            sprite = arcade.Sprite(self.ghost_textures[color][0])
+            self.ghost_sprites.append(sprite)
 
         self.ghost_sprites: arcade.SpriteList[arcade.Sprite] = (
             arcade.SpriteList()
@@ -67,6 +76,26 @@ class TestView(arcade.View):
         self._draw_maze(left, bottom, cell_size)
         self._draw_player(left, bottom, cell_size)
         self._draw_ghosts(left, bottom, cell_size)
+
+        for ghost, sprite, color in zip(
+            self.ghosts,
+            self.ghost_sprites,
+            self.ghost_colors,
+        ):
+            row, col = ghost.row, ghost.col
+
+            texture = self.ghost_textures[color][self.frame]
+            sprite.texture = texture
+
+            center_x = left + (col + 0.5) * cell_size
+            center_y = bottom + (self.maze.height - row - 0.5) * cell_size
+
+            sprite.scale = (
+                cell_size * 0.72 / texture.width,
+                cell_size * 0.72 / texture.height,
+            )
+            sprite.position = center_x, center_y
+        self.ghost_sprites.draw(pixelated=True)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
         direction = KEY_DIRECTIONS.get(symbol)
