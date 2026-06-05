@@ -1,6 +1,7 @@
 import random
 from enum import Enum
 
+from src.logger import logger
 from src.maze import Maze
 from src.utils import (
     DIRECTION,
@@ -47,12 +48,14 @@ class Ghost:
             return
         self._set_state(GhostState.EATEN)
         self.is_alive = False
+        logger.info("Ghost turns to eaten state")
 
     def get_frightened(self) -> None:
         """Switch to frightened unless the ghost is already eaten."""
         if self.state == GhostState.EATEN:
             return
         self._set_state(GhostState.FRIGHTEN)
+        logger.info("Ghost turns to frighten state")
 
     def respawn(self) -> None:
         """Reset the ghost at home in chase state."""
@@ -60,6 +63,7 @@ class Ghost:
         self.direction = DIRECTION.RIGHT
         self._set_state(GhostState.CHASE)
         self.is_alive = True
+        logger.info(f"Ghost is respawned at {self.pos}")
 
     def on_update(self, delta_time: float, player_pos: Position) -> None:
         """Move according to elapsed time and current state."""
@@ -76,6 +80,7 @@ class Ghost:
             distance = self._move_to_target(distance)
 
     def _update_state_time(self, delta_time: float) -> None:
+        """Change state when reach to the limit of the state time"""
         if self.state != GhostState.FRIGHTEN:
             return
 
@@ -115,28 +120,39 @@ class Ghost:
         return 0.0
 
     def _choose_direction(self, player_pos: Position) -> DIRECTION | None:
+        """According to the ghost state choose the proper direction"""
         directions = self._available_directions()
         if not directions:
             return None
 
         if self.state == GhostState.EATEN:
-            return min(directions, key=lambda d: self._distance_to_target(
-                d,
-                self.home,
-            ))
+            return min(
+                directions,
+                key=lambda d: self._distance_to_target(
+                    d,
+                    self.home,
+                ),
+            )
         if self.state == GhostState.CHASE:
-            return min(directions, key=lambda d: self._distance_to_target(
-                d,
-                player_pos,
-            ))
+            return min(
+                directions,
+                key=lambda d: self._distance_to_target(
+                    d,
+                    player_pos,
+                ),
+            )
         if self.state == GhostState.FRIGHTEN:
-            return max(directions, key=lambda d: self._distance_to_target(
-                d,
-                player_pos,
-            ))
+            return max(
+                directions,
+                key=lambda d: self._distance_to_target(
+                    d,
+                    player_pos,
+                ),
+            )
         return random.choice(directions)
 
     def _available_directions(self) -> list[DIRECTION]:
+        """Return the available directions opposite direction is not prefered"""
         directions = [
             direction
             for direction in DIRECTION
@@ -146,15 +162,16 @@ class Ghost:
             return directions
 
         opposite = OPPOSITE_DIRECTIONS[self.direction]
-        forward_directions = [
+        next_directions = [
             direction for direction in directions if direction != opposite
         ]
-        return forward_directions or directions
+        return next_directions or directions
 
     def _distance_to_target(
         self,
         direction: DIRECTION,
         target: Position,
     ) -> int:
+        """Mahathon distance between current pos and target pos"""
         next_pos = next_position(self.pos, direction)
         return abs(next_pos.x - target.x) + abs(next_pos.y - target.y)
