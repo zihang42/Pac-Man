@@ -1,13 +1,6 @@
 from src.logger import logger
 from src.maze import Maze
-from src.utils import DIRECTION, Position
-
-OFFSETS = {
-    DIRECTION.UP: (-1, 0),
-    DIRECTION.DOWN: (1, 0),
-    DIRECTION.LEFT: (0, -1),
-    DIRECTION.RIGHT: (0, 1),
-}
+from src.utils import DIRECTION, Position, next_position
 
 
 class Player:
@@ -37,20 +30,11 @@ class Player:
 
     def move(self, direction: DIRECTION) -> None:
         """Move one cell in the given direction if the path is open."""
-        self.direction = direction
         if not self.maze.can_move(self.pos, direction):
             return
 
-        if direction == DIRECTION.UP:
-            self.pos = Position(self.pos.x - 1, self.pos.y)
-        elif direction == DIRECTION.DOWN:
-            self.pos = Position(self.pos.x + 1, self.pos.y)
-        elif direction == DIRECTION.LEFT:
-            self.pos = Position(self.pos.x, self.pos.y - 1)
-        elif direction == DIRECTION.RIGHT:
-            self.pos = Position(self.pos.x, self.pos.y + 1)
-        self.row = float(self.pos.x)
-        self.col = float(self.pos.y)
+        self.direction = direction
+        self._set_position(next_position(self.pos, direction))
 
     def lose_life(self) -> None:
         """Decrease player lives by one."""
@@ -60,12 +44,12 @@ class Player:
 
     def respawn(self) -> None:
         """Respawn the player at the center of the maze."""
-        self.pos = Position(self.maze.height // 2, self.maze.width // 2)
+        self._set_position(
+            Position(self.maze.height // 2, self.maze.width // 2)
+        )
         self.direction = DIRECTION.RIGHT
         self.request_direction = DIRECTION.RIGHT
         self.target = None
-        self.row = float(self.pos.x)
-        self.col = float(self.pos.y)
         self.is_alive = True
         logger.info(f"Player is respawned at {self.pos}")
 
@@ -90,13 +74,15 @@ class Player:
                     self.direction = self.request_direction
                 # Move on the same direction
                 if self.maze.can_move(self.pos, self.direction):
-                    self.target = Position(
-                        self.pos.x + OFFSETS[self.direction][0],
-                        self.pos.y + OFFSETS[self.direction][1],
-                    )
+                    self.target = next_position(self.pos, self.direction)
                 else:
                     break
             distance = self._move_to_target(distance)
+
+    def _set_position(self, pos: Position) -> None:
+        self.pos = pos
+        self.row = float(pos.x)
+        self.col = float(pos.y)
 
     def _move_to_target(self, distance: float) -> float:
         """Move toward target and return leftover distance."""
@@ -107,9 +93,7 @@ class Player:
         target_distance = abs(distance_x) + abs(distance_y)
         if target_distance <= distance:
             distance -= target_distance
-            self.pos = self.target
-            self.row = float(self.pos.x)
-            self.col = float(self.pos.y)
+            self._set_position(self.target)
             self.target = None
             return distance
         ratio = distance / target_distance
