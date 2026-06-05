@@ -63,6 +63,7 @@ class Player:
     def add_score(self, point: int) -> None:
         """Add score points."""
         self.score += point
+        logger.info(f"Player gains {point} points, total score: {self.score}")
 
     def set_direction(self, direction: DIRECTION) -> None:
         self.request_direction = direction
