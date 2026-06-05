@@ -27,14 +27,16 @@ class Maze:
         """Can the entity move on the given direction and position"""
         x, y = pos.x, pos.y
         cell = self.cells[x][y]
+
         if direction == DIRECTION.UP:
             return not cell.north_wall and x > 0
-        elif direction == DIRECTION.DOWN:
+        if direction == DIRECTION.DOWN:
             return not cell.south_wall and x < self.height - 1
-        elif direction == DIRECTION.LEFT:
+        if direction == DIRECTION.LEFT:
             return not cell.west_wall and y > 0
-        elif direction == DIRECTION.RIGHT:
+        if direction == DIRECTION.RIGHT:
             return not cell.east_wall and y < self.width - 1
+        return False
 
 
 class MazeLoader:
@@ -79,6 +81,6 @@ class MazeLoader:
             _cells.append(cells)
         logger.info(
             f"maze generated, width: {self.level.width} "
-            "height: {self.level.height}"
+            f"height: {self.level.height}"
         )
         return Maze(self.level.width, self.level.height, _cells)
