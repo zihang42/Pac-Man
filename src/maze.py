@@ -27,7 +27,6 @@ class Maze:
         """Can the entity move on the given direction and position"""
         x, y = pos.x, pos.y
         cell = self.cells[x][y]
-
         if direction == DIRECTION.UP:
             return not cell.north_wall and x > 0
         if direction == DIRECTION.DOWN:
