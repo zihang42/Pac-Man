@@ -133,7 +133,7 @@ class Parser:
                 data_copy[key] = getattr(defaults, key)
                 logger.warning(
                     f"Invalid config field {key}, using default "
-                    "value: {getattr(defaults, key)}",
+                    f"value: {getattr(defaults, key)}",
                 )
 
         return Config.model_validate(data_copy)

@@ -152,7 +152,8 @@ class Ghost:
         return random.choice(directions)
 
     def _available_directions(self) -> list[DIRECTION]:
-        """Return the available directions opposite direction is not prefered"""
+        """Return the available directions opposite
+        direction is not prefered"""
         directions = [
             direction
             for direction in DIRECTION
