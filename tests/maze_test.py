@@ -1,8 +1,8 @@
 import arcade
 
 from src.ghost import Ghost, GhostState
-from src.maze import Maze
-from src.player import Player
+from src.level import Level
+from src.parser import Config
 from src.utils import DIRECTION
 from visualizer.views import sprites as _sprites  # noqa: F401
 
@@ -17,32 +17,36 @@ KEY_DIRECTIONS = {
     arcade.key.D: DIRECTION.RIGHT,
 }
 
-POINTS_PER_GHOST = 200
-COLLISION_RADIUS = 0.35
 SPRITE_SCALE = 0.72
+PACGUM_RADIUS = 0.10
+SUPER_PACGUM_RADIUS = 0.22
 ANIMATION_FRAME_TIME = 0.12
-PLAYER_DEATH_FRAME_TIME = 0.08
 
 
 class TestView(arcade.View):
-    """Debug view for testing maze rendering and entity movement."""
-
     def __init__(
-        self, maze: Maze, player: Player, ghosts: list[Ghost]
+        self,
+        config: Config,
+        level_index: int = 0,
+        player_speed: int = 5,
+        ghost_speed: int = 3,
+        is_cheat_mode: bool = False,
     ) -> None:
         super().__init__()
-        self.maze = maze
-        self.player = player
-        self.ghosts = ghosts
-        self.margin = 48
+        self.config = config
+        self.level_index = level_index
+        self.player_speed = player_speed
+        self.ghost_speed = ghost_speed
+        self.is_cheat_mode = is_cheat_mode
+        self.finished_game = False
+        self.level = self._create_level(level_index)
+        self.next_level = self._create_next_level()
+        self._sync_level_refs()
+        self.margin = 10
         self.frame = 0
         self.frame_time = 0.0
-        self.player_is_dying = False
-        self.death_frame = 0
-        self.death_frame_time = 0.0
 
         self.player_textures = self._load_player_textures()
-        self.player_death_textures = self._load_player_death_textures()
         self.ghost_textures = self._load_ghost_textures()
 
         self.player_sprite = arcade.Sprite(
@@ -66,6 +70,7 @@ class TestView(arcade.View):
         self.clear()
         left, bottom, cell_size = self._layout()
         self._draw_maze(left, bottom, cell_size)
+        self._draw_pacgums(left, bottom, cell_size)
         self._draw_player(left, bottom, cell_size)
         self._draw_ghosts(left, bottom, cell_size)
 
@@ -76,14 +81,47 @@ class TestView(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         self._update_animation(delta_time)
-        if self.player_is_dying:
-            self._update_player_death(delta_time)
+        if self.finished_game:
             return
 
-        self.player.on_update(delta_time)
-        for ghost in self.ghosts:
-            ghost.on_update(delta_time, self.player.pos)
-        self._check_collisions()
+        self.level.on_update(delta_time)
+        if self.level.win:
+            self._load_next_level()
+
+    def _create_level(self, level_index: int) -> Level:
+        return Level(
+            lvl=level_index,
+            config=self.config,
+            player_speed=self.player_speed,
+            ghost_speed=self.ghost_speed,
+            is_cheat_mode=self.is_cheat_mode,
+        )
+
+    def _create_next_level(self) -> Level | None:
+        next_level = self.level_index + 1
+        if next_level >= len(self.config.levels):
+            return None
+        return self._create_level(next_level)
+
+    def _sync_level_refs(self) -> None:
+        self.maze = self.level.maze
+        self.player = self.level.player
+        self.ghosts = self.level.ghosts
+
+    def _load_next_level(self) -> None:
+        if self.next_level is None:
+            self.finished_game = True
+            return
+
+        score = self.player.score
+        lives = self.player.lives
+        self.level_index += 1
+        self.level = self.next_level
+        self.player = self.level.player
+        self.player.score = score
+        self.player.lives = lives
+        self._sync_level_refs()
+        self.next_level = self._create_next_level()
 
     def _draw_player(
         self,
@@ -126,6 +164,44 @@ class TestView(arcade.View):
             self._place_sprite(sprite, texture, center, cell_size)
         self.ghost_sprites.draw(pixelated=True)
 
+    def _draw_pacgums(
+        self,
+        left: float,
+        bottom: float,
+        cell_size: float,
+    ) -> None:
+        radius = max(2.0, cell_size * PACGUM_RADIUS)
+        for pacgum in self.level.pacgums:
+            center = self._cell_center(
+                pacgum.pos.x,
+                pacgum.pos.y,
+                left,
+                bottom,
+                cell_size,
+            )
+            arcade.draw_circle_filled(
+                center[0],
+                center[1],
+                radius,
+                arcade.color.WHITE,
+            )
+
+        radius = max(4.0, cell_size * SUPER_PACGUM_RADIUS)
+        for super_pacgum in self.level.super_pacgums:
+            center = self._cell_center(
+                super_pacgum.pos.x,
+                super_pacgum.pos.y,
+                left,
+                bottom,
+                cell_size,
+            )
+            arcade.draw_circle_filled(
+                center[0],
+                center[1],
+                radius,
+                arcade.color.WHITE,
+            )
+
     def _place_sprite(
         self,
         sprite: arcade.Sprite,
@@ -160,56 +236,7 @@ class TestView(arcade.View):
         self.frame += 1
         self.frame_time = 0.0
 
-    def _update_player_death(self, delta_time: float) -> None:
-        self.death_frame_time += delta_time
-        if self.death_frame_time < PLAYER_DEATH_FRAME_TIME:
-            return
-
-        self.death_frame_time = 0.0
-        self.death_frame += 1
-        if self.death_frame < len(self.player_death_textures):
-            return
-
-        self.player_is_dying = False
-        self.death_frame = 0
-        if self.player.lives > 0:
-            self._reset_after_player_hit()
-
-    def _check_collisions(self) -> None:
-        for ghost in self.ghosts:
-            if not self._is_colliding_with_player(ghost):
-                continue
-
-            if ghost.state == GhostState.FRIGHTEN:
-                ghost.get_eaten()
-                self.player.add_score(POINTS_PER_GHOST)
-            elif ghost.state == GhostState.CHASE:
-                self.player.lose_life()
-                self._start_player_death()
-                break
-
-    def _is_colliding_with_player(self, ghost: Ghost) -> bool:
-        return (
-            abs(ghost.row - self.player.row) <= COLLISION_RADIUS
-            and abs(ghost.col - self.player.col) <= COLLISION_RADIUS
-        )
-
-    def _start_player_death(self) -> None:
-        self.player_is_dying = True
-        self.player.is_alive = False
-        self.death_frame = 0
-        self.death_frame_time = 0.0
-
-    def _reset_after_player_hit(self) -> None:
-        self.player.respawn()
-        for ghost in self.ghosts:
-            ghost.respawn()
-
     def _get_player_texture(self) -> arcade.Texture:
-        if self.player_is_dying:
-            frame = min(self.death_frame, len(self.player_death_textures) - 1)
-            return self.player_death_textures[frame]
-
         textures = self.player_textures[self.player.direction]
         return textures[self.frame % len(textures)]
 
@@ -272,14 +299,6 @@ class TestView(arcade.View):
                 count=2,
             )
         return textures
-
-    def _load_player_death_textures(self) -> list[arcade.Texture]:
-        return self._load_texture_grid(
-            "pacman_death.png",
-            size=(79, 80),
-            columns=12,
-            count=12,
-        )
 
     def _load_ghost_textures(self) -> dict[str, list[arcade.Texture]]:
         textures = {}

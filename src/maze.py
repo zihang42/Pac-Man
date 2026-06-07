@@ -1,4 +1,3 @@
-import random
 from dataclasses import dataclass
 
 from mazegenerator.mazegenerator import MazeGenerator
@@ -47,18 +46,13 @@ class MazeLoader:
         self.level = level
 
     def load(self) -> Maze:
-        seed = (
-            random.randint(1, 999)
-            if self.level.seed is None
-            else self.level.seed
-        )
         try:
             generator = MazeGenerator(
                 (self.level.width, self.level.height),
                 False,
                 (0, 0),
                 (self.level.width - 1, self.level.height - 1),
-                seed,
+                self.level.seed,
             )
         except Exception as e:
             logger.error(f"failed to generate maze, {e}")

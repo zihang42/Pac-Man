@@ -2,13 +2,6 @@ from src.logger import logger
 from src.maze import Maze
 from src.utils import DIRECTION, Position, next_position
 
-OFFSETS = {
-    DIRECTION.UP: (-1, 0),
-    DIRECTION.DOWN: (1, 0),
-    DIRECTION.LEFT: (0, -1),
-    DIRECTION.RIGHT: (0, 1),
-}
-
 
 class Player:
     """
@@ -28,7 +21,8 @@ class Player:
         self.speed = speed
         self.score = 0
         self.is_alive = True
-        self.pos = Position(maze.height // 2, maze.width // 2)
+        self.spawn_pos = self._find_spawn_position()
+        self.pos = Position(self.spawn_pos.x, self.spawn_pos.y)
         self.direction = DIRECTION.RIGHT
         self.request_direction = DIRECTION.RIGHT
         self.target: Position | None = None
@@ -51,9 +45,7 @@ class Player:
 
     def respawn(self) -> None:
         """Respawn the player at the center of the maze."""
-        self._set_position(
-            Position(self.maze.height // 2, self.maze.width // 2)
-        )
+        self._set_position(Position(self.spawn_pos.x, self.spawn_pos.y))
         self.direction = DIRECTION.RIGHT
         self.request_direction = DIRECTION.RIGHT
         self.target = None
@@ -66,6 +58,7 @@ class Player:
         logger.info(f"Player gains {point} points, total score: {self.score}")
 
     def set_direction(self, direction: DIRECTION) -> None:
+        """Set direction."""
         self.request_direction = direction
 
     def on_update(self, delta_time: float) -> None:
@@ -91,6 +84,23 @@ class Player:
         self.pos = pos
         self.row = float(pos.x)
         self.col = float(pos.y)
+
+    def _find_spawn_position(self) -> Position:
+        """Respawn at the center of the maze if possible"""
+        center = Position(self.maze.height // 2, self.maze.width // 2)
+        candidates = [
+            center,
+            Position(center.x - 1, center.y),
+            Position(center.x + 1, center.y),
+            Position(center.x, center.y - 1),
+            Position(center.x, center.y + 1),
+        ]
+
+        for pos in candidates:
+            if not self.maze.cells[pos.x][pos.y].is_42_pattern:
+                return pos
+
+        return center
 
     def _move_to_target(self, distance: float) -> float:
         """Move toward target and return leftover distance."""
