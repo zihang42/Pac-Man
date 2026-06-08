@@ -52,7 +52,7 @@ class MazeLoader:
                 False,
                 (0, 0),
                 (self.level.width - 1, self.level.height - 1),
-                self.level.seed,
+                self.level.seed if self.level.seed else 42,
             )
         except Exception as e:
             logger.error(f"failed to generate maze, {e}")

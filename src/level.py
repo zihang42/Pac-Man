@@ -46,10 +46,10 @@ class Level:
         """Check level pass"""
         if not self.pacgums and not self.super_pacgums:
             self.win = True
-        logger.info(
-            f"Congradulations! You win level {self.lvl}"
-            f"with {self.player.score} points!"
-        )
+            logger.info(
+                f"Congradulations! You win level {self.lvl + 1}"
+                f" with {self.player.score} points!"
+            )
 
     def on_update(self, delta_time: float) -> None:
         """Run the level"""
