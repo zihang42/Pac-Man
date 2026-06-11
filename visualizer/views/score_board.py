@@ -1,12 +1,21 @@
 import re
+import sys
 from pathlib import Path
 
 import arcade
 
 from .highscores import HighscoreEntry, load_highscores, save_highscores
 
-assets_path = Path().absolute().resolve() / Path("visualizer/views/assets")
-arcade.resources.add_resource_handle("my-assets", assets_path)
+
+def get_resource_path(relative_path: str) -> Path:
+    """Return the correct resource path in development and PyInstaller."""
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(__file__).resolve().parents[2] / relative_path
+
+
+assets_path = get_resource_path("visualizer/views/assets")
+arcade.resources.add_resource_handle("my-assets", str(assets_path))
 arcade.load_font(":my-assets:fonts/ARCADECLASSIC.TTF")
 
 

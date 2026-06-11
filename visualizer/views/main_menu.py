@@ -1,15 +1,25 @@
-'''
-    The view of our main menu
-    This view will be display at the
-    game start's
-    6 -> pacman
-'''
-import arcade
-from pathlib import Path
-import sys
+"""
+The view of our main menu
+This view will be display at the
+game start's
+6 -> pacman
+"""
 
-assets_path = Path().absolute().resolve() / Path("visualizer/views/assets")
-arcade.resources.add_resource_handle("my-assets", assets_path)
+import sys
+from pathlib import Path
+
+import arcade
+
+
+def get_resource_path(relative_path: str) -> Path:
+    """Return the correct resource path in development and PyInstaller."""
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(__file__).resolve().parents[2] / relative_path
+
+
+assets_path = get_resource_path("visualizer/views/assets")
+arcade.resources.add_resource_handle("my-assets", str(assets_path))
 
 
 class MainMenuView(arcade.View):
@@ -30,16 +40,19 @@ class MainMenuView(arcade.View):
         )
         self.quit = arcade.Text(
             "To  Get  Back  To  Menu  Press  Esc",
-            130, 200,
+            130,
+            200,
             arcade.color.YELLOW,
             30,
-            font_name="ARCADECLASSIC"
+            font_name="ARCADECLASSIC",
         )
-        self.sprite_list: arcade.SpriteList[arcade.Sprite] = \
+        self.sprite_list: arcade.SpriteList[arcade.Sprite] = (
             arcade.SpriteList()
+        )
         self.sprite_list.append(self.menu_sprite)
-        self.control_list: arcade.SpriteList[arcade.Sprite] = \
+        self.control_list: arcade.SpriteList[arcade.Sprite] = (
             arcade.SpriteList()
+        )
         self.control_list.append(self.control)
         self.pacman_visu = pacman_visu
         self.show_control = False
@@ -62,9 +75,7 @@ class MainMenuView(arcade.View):
         if symbol == arcade.key.P:
             self.pacman_visu.view_game_instance()
         if symbol == arcade.key.S:
-            self.pacman_visu.view_score_board(
-                from_menu=True
-            )
+            self.pacman_visu.view_score_board(from_menu=True)
 
     def on_update(self, delta_time: float) -> None:
         pass

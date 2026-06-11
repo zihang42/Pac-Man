@@ -1,14 +1,25 @@
-'''
-    The view of the victory screen
-    This view will be display when
-    the player win
-'''
-import arcade
+"""
+The view of the victory screen
+This view will be display when
+the player win
+"""
+
+import sys
 import time
 from pathlib import Path
 
-assets_path = Path().absolute().resolve() / Path("visualizer/views/assets")
-arcade.resources.add_resource_handle("my-assets", assets_path)
+import arcade
+
+
+def get_resource_path(relative_path: str) -> Path:
+    """Return the correct resource path in development and PyInstaller."""
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(__file__).resolve().parents[2] / relative_path
+
+
+assets_path = get_resource_path("visualizer/views/assets")
+arcade.resources.add_resource_handle("my-assets", str(assets_path))
 
 
 class VictoryView(arcade.View):
@@ -21,8 +32,9 @@ class VictoryView(arcade.View):
             400,
             400,
         )
-        self.sprite_list: arcade.SpriteList[arcade.Sprite] = \
+        self.sprite_list: arcade.SpriteList[arcade.Sprite] = (
             arcade.SpriteList()
+        )
         self.sprite_list.append(self.menu_sprite)
         self.pacman_visu = pacman_visu
 
