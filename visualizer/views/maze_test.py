@@ -210,6 +210,7 @@ class TestView(arcade.View):
         self._sync_level_refs()
         self.next_level = self._create_next_level()
         self.remaining_time = float(self.config.level_max_time)
+
     def _draw_player(
         self,
         left: float,
