@@ -1,5 +1,7 @@
 import random
 
+import arcade
+
 from src.ghost import Ghost, GhostState
 from src.logger import logger
 from src.maze import MazeLoader
@@ -7,7 +9,6 @@ from src.pacgum import Pacgum, SuperPacgum
 from src.parser import Config
 from src.player import Player
 from src.utils import FRIGHTEN_DURATION, Position
-import arcade
 
 
 class Level:
@@ -20,7 +21,7 @@ class Level:
         config: Config,
         player_speed: int = 4,
         ghost_speed: int = 3,
-        is_cheat_mode: bool = False
+        is_cheat_mode: bool = False,
     ) -> None:
         self.config = config
         self.is_cheat_mode = is_cheat_mode

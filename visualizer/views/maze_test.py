@@ -1,11 +1,13 @@
+from pathlib import Path
+
 import arcade
 
 from src.ghost import Ghost, GhostState
 from src.level import Level
 from src.parser import Config
 from src.utils import DIRECTION
+
 from . import sprites as _sprites  # noqa: F401
-from pathlib import Path
 
 KEY_DIRECTIONS = {
     arcade.key.UP: DIRECTION.UP,
@@ -36,7 +38,7 @@ class TestView(arcade.View):
         level_index: int = 0,
         player_speed: int = 5,
         ghost_speed: int = 3,
-        is_cheat_mode: bool = False
+        is_cheat_mode: bool = False,
     ) -> None:
         super().__init__()
         self.pacman_visu = pacman_visu
@@ -75,34 +77,49 @@ class TestView(arcade.View):
 
         self.score_text = arcade.Text(
             f"Score {self.pacman_visu.score}",
-            0, 780,
+            0,
+            780,
             arcade.color.GREEN,
             20,
             anchor_x="left",
-            font_name="ARCADECLASSIC"
+            font_name="ARCADECLASSIC",
         )
         self.lives_text = arcade.Text(
             f"Lives {self.player.lives}",
-            790, 780,
+            790,
+            780,
             arcade.color.RED,
             20,
             anchor_x="right",
-            font_name="ARCADECLASSIC"
+            font_name="ARCADECLASSIC",
         )
         self.pause_text = arcade.Text(
             "PAUSE",
-            330, 400,
+            330,
+            400,
             arcade.color.YELLOW,
             40,
-            font_name="ARCADECLASSIC"
+            font_name="ARCADECLASSIC",
         )
         self.is_paused = False
         self.ragequit_text = arcade.Text(
             "To  Quit  Press  Q",
-            250, 350,
+            250,
+            350,
             arcade.color.YELLOW,
             30,
-            font_name="ARCADECLASSIC"
+            font_name="ARCADECLASSIC",
+        )
+        self.remaining_time = float(self.config.level_max_time)
+
+        self.time_text = arcade.Text(
+            f"Time {int(self.remaining_time)}",
+            400,
+            780,
+            arcade.color.WHITE,
+            20,
+            anchor_x="center",
+            font_name="ARCADECLASSIC",
         )
 
     def on_draw(self) -> None:
@@ -115,6 +132,7 @@ class TestView(arcade.View):
 
         self.score_text.draw()
         self.lives_text.draw()
+        self.time_text.draw()
         if self.is_paused:
             self.pause_text.draw()
             self.ragequit_text.draw()
@@ -128,6 +146,10 @@ class TestView(arcade.View):
             self.player.set_direction(direction)
         if symbol == arcade.key.Q:
             self.pacman_visu.view_menu()
+        if symbol == arcade.key.F1:
+            self.is_cheat_mode = not self.is_cheat_mode
+            self.level.is_cheat_mode = self.is_cheat_mode
+            print(f"Cheat mode: {self.is_cheat_mode}")
 
     def on_update(self, delta_time: float) -> None:
         if self.is_paused:
@@ -142,6 +164,15 @@ class TestView(arcade.View):
         self.pacman_visu.score = self.player.score
         self.score_text.text = f"Score {self.pacman_visu.score}"
         self.lives_text.text = f"Lives {self.player.lives}"
+        self.remaining_time -= delta_time
+
+        if self.remaining_time <= 0:
+            self.remaining_time = 0
+            self.game_over = True
+            self.pacman_visu.view_game_over()
+            return
+
+        self.time_text.text = f"Time {int(self.remaining_time)}"
 
     def _create_level(self, level_index: int) -> Level:
         return Level(
@@ -150,7 +181,7 @@ class TestView(arcade.View):
             player_speed=self.player_speed,
             ghost_speed=self.ghost_speed,
             is_cheat_mode=self.is_cheat_mode,
-            pacman_visu=self.pacman_visu
+            pacman_visu=self.pacman_visu,
         )
 
     def _create_next_level(self) -> Level | None:
@@ -178,7 +209,7 @@ class TestView(arcade.View):
         self.player.lives = lives
         self._sync_level_refs()
         self.next_level = self._create_next_level()
-
+        self.remaining_time = float(self.config.level_max_time)
     def _draw_player(
         self,
         left: float,

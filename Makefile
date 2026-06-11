@@ -28,10 +28,17 @@ cow:
 	UV_LINK_MODE=$(UV_LINK_MODE) uvx pycowsay hello from uv
 
 build:
+	rm -rf build dist
 	UV_LINK_MODE=$(UV_LINK_MODE) uv run pyinstaller \
 		--windowed \
 		--name pac_man \
 		--add-data "visualizer/views/assets:visualizer/views/assets" \
 		--add-data "config.json:." \
 		pac_man.py
-	zip -r dist/pac_man_linux.zip dist/pac_man
+
+	rm -rf dist/pac_man/_internal/arcade/VERSION
+	cp .venv/lib/python3.13/site-packages/arcade/VERSION dist/pac_man/_internal/arcade/VERSION
+
+	cp config.json dist/pac_man/config.json
+
+	cd dist && zip -r pac_man_linux.zip pac_man

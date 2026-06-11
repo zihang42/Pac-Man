@@ -3,15 +3,17 @@ The main window of arcade where
 everything will be display
 """
 
+from typing import Any
+
 import arcade
 
-from .views.maze_test import TestView
-from typing import Any
+from src.parser import Config
+
 from .views.game_over import GameOverView
 from .views.main_menu import MainMenuView
+from .views.maze_test import TestView
 from .views.score_board import ScoreBoardView
 from .views.victory import VictoryView
-from src.parser import Config
 
 
 class Window:
@@ -39,8 +41,9 @@ class Window:
         the game such as the start static method
     """
 
-    def __init__(self, window: int, height: int,
-                 fps: int, config: Config) -> None:
+    def __init__(
+        self, window: int, height: int, fps: int, config: Config
+    ) -> None:
         self.window = arcade.Window(
             width=window,
             height=height,
@@ -51,7 +54,7 @@ class Window:
         )
         self.config = config
         self.score = 0
-        '''
+        """
         self.game_instance = TestView(
             config,
             level_index=0,
@@ -59,7 +62,7 @@ class Window:
             ghost_speed=3,
             is_cheat_mode=True
         )
-        '''
+        """
 
     def view_menu(self) -> None:
         """
@@ -73,9 +76,7 @@ class Window:
         This method is called to display the
         score board
         """
-        self.window.show_view(ScoreBoardView(
-            self.pacman_visu, from_menu
-        ))
+        self.window.show_view(ScoreBoardView(self.pacman_visu, from_menu))
 
     def view_game_over(self) -> None:
         """
@@ -96,14 +97,16 @@ class Window:
         This method is called to display
         the game instance
         """
-        self.window.show_view(TestView(
-            self.config,
-            level_index=0,
-            player_speed=4,
-            ghost_speed=3,
-            is_cheat_mode=False,
-            pacman_visu=self.pacman_visu
-        ))
+        self.window.show_view(
+            TestView(
+                self.config,
+                level_index=0,
+                player_speed=4,
+                ghost_speed=3,
+                is_cheat_mode=False,
+                pacman_visu=self.pacman_visu,
+            )
+        )
 
     def start(self, pacman_visu: Any) -> None:
         """
@@ -112,4 +115,3 @@ class Window:
         """
         self.pacman_visu = pacman_visu
         self.window.show_view(MainMenuView(pacman_visu))
-        arcade.run()

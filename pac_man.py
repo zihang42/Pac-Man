@@ -15,7 +15,7 @@ def main() -> None:
         config,
     )
     pacman_visu.start(pacman_visu)
-    '''
+    """
     window = arcade.Window(
         config.window_width,
         config.window_height,
@@ -31,7 +31,7 @@ def main() -> None:
             #is_cheat_mode=True,
         )
     )
-    '''
+    """
     arcade.run()
 
 
