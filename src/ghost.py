@@ -66,7 +66,7 @@ class Ghost:
         logger.info(f"Ghost is respawned at {self.pos} and start chasing")
 
     def on_update(self, delta_time: float, player_pos: Position) -> None:
-        """Move according to elapsed time and current state.""" 
+        """Move according to elapsed time and current state."""
         self._update_state_time(delta_time)
 
         distance = max(0.0, delta_time) * max(1, self.speed)

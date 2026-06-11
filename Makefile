@@ -14,6 +14,7 @@ debug:
 clean:
 	find . -not -path "./.venv*" -name "__pycache__" -exec rm -rf {} +
 	find . -not -path "./.venv*" -name ".mypy_cache" -exec rm -rf {} +
+	rm -rf build dist
 
 lint:
 	UV_LINK_MODE=$(UV_LINK_MODE) uv run flake8 . --exclude=.venv
@@ -27,4 +28,10 @@ cow:
 	UV_LINK_MODE=$(UV_LINK_MODE) uvx pycowsay hello from uv
 
 build:
-	UV_LINK_MODE=$(UV_LINK_MODE) uv build
+	UV_LINK_MODE=$(UV_LINK_MODE) uv run pyinstaller \
+		--windowed \
+		--name pac_man \
+		--add-data "visualizer/views/assets:visualizer/views/assets" \
+		--add-data "config.json:." \
+		pac_man.py
+	zip -r dist/pac_man_linux.zip dist/pac_man
