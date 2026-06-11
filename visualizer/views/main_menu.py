@@ -2,25 +2,69 @@
     The view of our main menu
     This view will be display at the
     game start's
+    6 -> pacman
 '''
 import arcade
-from .sprites import SpritesManager
+from pathlib import Path
+import sys
+
+assets_path = Path().absolute().resolve() / Path("visualizer/views/assets")
+arcade.resources.add_resource_handle("my-assets", assets_path)
 
 
 class MainMenuView(arcade.View):
-    def __init__(self, debug: bool = False) -> None:
+    def __init__(self, pacman_visu: arcade.Window) -> None:
         super().__init__()
-        self.debug = debug
-        self.sprites = SpritesManager(debug)
-        self.sprites.create_sprite_list()
+
+        self.menu_sprite = arcade.Sprite(
+            ":my-assets:tile_maps/main_menu/main_menu.png",
+            1.1,
+            400,
+            400,
+        )
+        self.control = arcade.Sprite(
+            ":my-assets:tile_maps/control/control.png",
+            1,
+            400,
+            400,
+        )
+        self.quit = arcade.Text(
+            "To  Get  Back  To  Menu  Press  Esc",
+            130, 200,
+            arcade.color.YELLOW,
+            30,
+            font_name="ARCADECLASSIC"
+        )
+        self.sprite_list: arcade.SpriteList[arcade.Sprite] = \
+            arcade.SpriteList()
+        self.sprite_list.append(self.menu_sprite)
+        self.control_list: arcade.SpriteList[arcade.Sprite] = \
+            arcade.SpriteList()
+        self.control_list.append(self.control)
+        self.pacman_visu = pacman_visu
+        self.show_control = False
 
     def on_draw(self) -> None:
         self.clear()
-        if self.debug:
-            for lst in self.sprites.sprites_list:
-                lst.draw()
-            self.sprites.walls_list.draw()
+        self.sprite_list.draw()
+        if self.show_control:
+            self.control_list.draw()
+            self.quit.draw()
+
+    def on_key_press(self, symbol: int, modifiers: int) -> None:
+        if symbol == arcade.key.ESCAPE:
+            if self.show_control:
+                self.show_control = False
+            else:
+                sys.exit()
+        if symbol == arcade.key.C:
+            self.show_control = True
+        if symbol == arcade.key.P:
+            self.pacman_visu.view_game_instance()
+        if symbol == arcade.key.S:
+            self.pacman_visu.view_score_board(
+                from_menu=True
+            )
 
     def on_update(self, delta_time: float) -> None:
-        for lst in self.sprites.sprites_list:
-            lst.update()
+        pass
