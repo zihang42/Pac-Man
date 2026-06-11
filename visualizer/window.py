@@ -5,10 +5,13 @@ everything will be display
 
 import arcade
 
+from .views.maze_test import TestView
+from typing import Any
 from .views.game_over import GameOverView
 from .views.main_menu import MainMenuView
 from .views.score_board import ScoreBoardView
 from .views.victory import VictoryView
+from src.parser import Config
 
 
 class Window:
@@ -36,53 +39,77 @@ class Window:
         the game such as the start static method
     """
 
-    def __init__(self, window: int, height: int, fps: int) -> None:
+    def __init__(self, window: int, height: int,
+                 fps: int, config: Config) -> None:
         self.window = arcade.Window(
             width=window,
             height=height,
             title="PacMan",
             fullscreen=False,
-            # center_window=True,
             enable_polling=True,
             update_rate=1 / fps,
         )
-        self.menu = MainMenuView(debug=True)
-        self.score_board = ScoreBoardView()
-        self.game_over = GameOverView()
-        self.victory = VictoryView()
+        self.config = config
+        self.score = 0
+        '''
+        self.game_instance = TestView(
+            config,
+            level_index=0,
+            player_speed=4,
+            ghost_speed=3,
+            is_cheat_mode=True
+        )
+        '''
 
     def view_menu(self) -> None:
         """
         This method is called to display the
         main menu
         """
-        self.window.show_view(self.menu)
+        self.window.show_view(MainMenuView(self.pacman_visu))
 
-    def view_score_board(self) -> None:
+    def view_score_board(self, from_menu: bool = False) -> None:
         """
         This method is called to display the
         score board
         """
-        self.window.show_view(self.score_board)
+        self.window.show_view(ScoreBoardView(
+            self.pacman_visu, from_menu
+        ))
 
     def view_game_over(self) -> None:
         """
         This method is called to display the
         game over screen
         """
-        self.window.show_view(self.game_over)
+        self.window.show_view(GameOverView(self.pacman_visu))
 
     def view_victory(self) -> None:
         """
         This method is called to display the
         victory screen
         """
-        self.window.show_view(self.victory)
+        self.window.show_view(VictoryView(self.pacman_visu))
 
-    def start(self) -> None:
+    def view_game_instance(self) -> None:
+        """
+        This method is called to display
+        the game instance
+        """
+        self.window.show_view(TestView(
+            self.config,
+            level_index=0,
+            player_speed=4,
+            ghost_speed=3,
+            is_cheat_mode=False,
+            pacman_visu=self.pacman_visu
+        ))
+
+    def start(self, pacman_visu: Any) -> None:
         """
         This method is called to start the arcade
         and to display the main menu
         """
-        self.window.show_view(self.menu)
+        self.pacman_visu = pacman_visu
+        self.window.show_view(MainMenuView(pacman_visu))
         arcade.run()

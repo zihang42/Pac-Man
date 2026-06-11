@@ -4,7 +4,8 @@ from src.ghost import Ghost, GhostState
 from src.level import Level
 from src.parser import Config
 from src.utils import DIRECTION
-from visualizer.views import sprites as _sprites  # noqa: F401
+from . import sprites as _sprites  # noqa: F401
+from pathlib import Path
 
 KEY_DIRECTIONS = {
     arcade.key.UP: DIRECTION.UP,
@@ -22,17 +23,23 @@ PACGUM_RADIUS = 0.10
 SUPER_PACGUM_RADIUS = 0.22
 ANIMATION_FRAME_TIME = 0.12
 
+assets_path = Path().absolute().resolve() / Path("visualizer/views/assets")
+arcade.resources.add_resource_handle("my-assets", assets_path)
+arcade.load_font(":my-assets:fonts/ARCADECLASSIC.TTF")
+
 
 class TestView(arcade.View):
     def __init__(
         self,
         config: Config,
+        pacman_visu: arcade.Window,
         level_index: int = 0,
         player_speed: int = 5,
         ghost_speed: int = 3,
-        is_cheat_mode: bool = False,
+        is_cheat_mode: bool = False
     ) -> None:
         super().__init__()
+        self.pacman_visu = pacman_visu
         self.config = config
         self.level_index = level_index
         self.player_speed = player_speed
@@ -66,6 +73,38 @@ class TestView(arcade.View):
             sprite = arcade.Sprite(self.ghost_textures[color][0])
             self.ghost_sprites.append(sprite)
 
+        self.score_text = arcade.Text(
+            f"Score {self.pacman_visu.score}",
+            0, 780,
+            arcade.color.GREEN,
+            20,
+            anchor_x="left",
+            font_name="ARCADECLASSIC"
+        )
+        self.lives_text = arcade.Text(
+            f"Lives {self.player.lives}",
+            790, 780,
+            arcade.color.RED,
+            20,
+            anchor_x="right",
+            font_name="ARCADECLASSIC"
+        )
+        self.pause_text = arcade.Text(
+            "PAUSE",
+            330, 400,
+            arcade.color.YELLOW,
+            40,
+            font_name="ARCADECLASSIC"
+        )
+        self.is_paused = False
+        self.ragequit_text = arcade.Text(
+            "To  Quit  Press  Q",
+            250, 350,
+            arcade.color.YELLOW,
+            30,
+            font_name="ARCADECLASSIC"
+        )
+
     def on_draw(self) -> None:
         self.clear()
         left, bottom, cell_size = self._layout()
@@ -74,12 +113,25 @@ class TestView(arcade.View):
         self._draw_player(left, bottom, cell_size)
         self._draw_ghosts(left, bottom, cell_size)
 
+        self.score_text.draw()
+        self.lives_text.draw()
+        if self.is_paused:
+            self.pause_text.draw()
+            self.ragequit_text.draw()
+
     def on_key_press(self, symbol: int, modifiers: int) -> None:
+        if symbol == arcade.key.ESCAPE:
+            self.is_paused = not self.is_paused
+            return
         direction = KEY_DIRECTIONS.get(symbol)
         if direction is not None:
             self.player.set_direction(direction)
+        if symbol == arcade.key.Q:
+            self.pacman_visu.view_menu()
 
     def on_update(self, delta_time: float) -> None:
+        if self.is_paused:
+            return
         self._update_animation(delta_time)
         if self.finished_game:
             return
@@ -87,6 +139,9 @@ class TestView(arcade.View):
         self.level.on_update(delta_time)
         if self.level.win:
             self._load_next_level()
+        self.pacman_visu.score = self.player.score
+        self.score_text.text = f"Score {self.pacman_visu.score}"
+        self.lives_text.text = f"Lives {self.player.lives}"
 
     def _create_level(self, level_index: int) -> Level:
         return Level(
@@ -95,6 +150,7 @@ class TestView(arcade.View):
             player_speed=self.player_speed,
             ghost_speed=self.ghost_speed,
             is_cheat_mode=self.is_cheat_mode,
+            pacman_visu=self.pacman_visu
         )
 
     def _create_next_level(self) -> Level | None:
@@ -118,7 +174,7 @@ class TestView(arcade.View):
         self.level_index += 1
         self.level = self.next_level
         self.player = self.level.player
-        self.player.score = score
+        self.player.score += score
         self.player.lives = lives
         self._sync_level_refs()
         self.next_level = self._create_next_level()

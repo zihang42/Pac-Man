@@ -7,6 +7,7 @@ from src.pacgum import Pacgum, SuperPacgum
 from src.parser import Config
 from src.player import Player
 from src.utils import FRIGHTEN_DURATION, Position
+import arcade
 
 
 class Level:
@@ -15,10 +16,11 @@ class Level:
     def __init__(
         self,
         lvl: int,
+        pacman_visu: arcade.Window,
         config: Config,
         player_speed: int = 4,
         ghost_speed: int = 3,
-        is_cheat_mode: bool = False,
+        is_cheat_mode: bool = False
     ) -> None:
         self.config = config
         self.is_cheat_mode = is_cheat_mode
@@ -35,6 +37,7 @@ class Level:
         self.time_left = float(config.level_max_time)
         self.win = False
         self.game_over = False
+        self.pacman_visu = pacman_visu
 
     def check_collisions(self) -> None:
         """Check collision between player and entities"""
@@ -53,8 +56,10 @@ class Level:
 
     def on_update(self, delta_time: float) -> None:
         """Run the level"""
-        if self.win or self.game_over:
-            return
+        if self.win:
+            self.pacman_visu.view_victory()
+        if self.game_over:
+            self.pacman_visu.view_game_over()
 
         self.time_left -= max(0.0, delta_time)
         if self.time_left <= 0:
